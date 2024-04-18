@@ -1,5 +1,6 @@
 <script setup>
 import { useUserInfoStore } from "@/stores/userInfo"
+import { MinProjectAmountEth } from "@/utils/Constants"
 import useVuelidate from "@vuelidate/core"
 import { maxLength, minLength, minValue, required } from "@vuelidate/validators"
 import { ethers } from "ethers"
@@ -19,7 +20,7 @@ const rules = {
   title: { required, minLength: minLength(3) },
   recipient: { required, minLength: minLength(42), maxLength: maxLength(42) },
   recipientSpecifier: { required },
-  amountNeeded: { required, minValue: minValue(0.001) }
+  amountNeeded: { required, minValue: minValue(MinProjectAmountEth) }
 }
 
 const v$ = useVuelidate(rules, state)
@@ -123,7 +124,7 @@ async function tryAddProject() {
               class="form-control"
               id="amountNeededInput"
               v-model="state.amountNeeded"
-              min="0.001"
+              :min="MinProjectAmountEth"
             />
             <p v-if="v$.amountNeeded.$error" class="form-text text-danger">
               {{ v$.amountNeeded.$errors[0].$message }}

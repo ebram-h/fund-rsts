@@ -1,12 +1,38 @@
 <script setup>
 import { useProjectsStore } from "@/stores/projects"
 import { ethers } from "ethers"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import ProgressBar from "../components/ProgressBar.vue"
+import { MinProjectAmountEth } from "@/utils/Constants"
+import { minValue, required } from "@vuelidate/validators"
+import useVuelidate from "@vuelidate/core"
+import { useUserInfoStore } from "@/stores/userInfo"
 
 const projectsStore = useProjectsStore()
+const userInfoStore = useUserInfoStore()
 
-const modalProjectId = ref(0)
+const modalProjectIndex = ref(0)
+
+const projectSelectedToFund = ref(0)
+const amountToSend = ref(0)
+
+const amountValidationRule = computed(() => ({
+  amountToSend: {
+    required,
+    minValue: minValue(MinProjectAmountEth)
+  }
+}))
+
+const v$ = useVuelidate(amountValidationRule, { amountToSend })
+
+async function sendFunds() {
+  const isValid = await v$.value.$validate()
+  if (!isValid) return
+
+  await userInfoStore.connectedContract.fundProject(projectSelectedToFund.value, {
+    value: ethers.parseEther(amountToSend.value.toString())
+  })
+}
 </script>
 
 <template>
@@ -22,25 +48,32 @@ const modalProjectId = ref(0)
         <div class="col">
           <ProgressBar
             :percentage="
-              projectsStore.projects[modalProjectId].amountFunded /
-              projectsStore.projects[modalProjectId].amountNeeded
+              (projectsStore.projects[index].amountFunded * 100n) /
+              projectsStore.projects[index].amountNeeded
             "
             :text="
-              ethers.formatEther(projectsStore.projects[modalProjectId].amountFunded) +
+              ethers.formatEther(projectsStore.projects[index].amountFunded) +
               ' / ' +
-              ethers.formatEther(projectsStore.projects[modalProjectId].amountNeeded) +
+              ethers.formatEther(projectsStore.projects[index].amountNeeded) +
               ' funded'
             "
             class="me-2"
           />
         </div>
         <div class="col-auto">
-          <button class="btn btn-primary me-2">Fund</button>
+          <button
+            class="btn btn-primary me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#fundModal"
+            @click="projectSelectedToFund = index"
+          >
+            Fund
+          </button>
           <button
             class="btn btn-secondary"
             data-bs-toggle="modal"
             data-bs-target="#projectInfoModal"
-            @click="modalProjectId = index"
+            @click="modalProjectIndex = index"
           >
             i
           </button>
@@ -52,32 +85,64 @@ const modalProjectId = ref(0)
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Project {{ projectsStore.projects[modalProjectId].title }}</h5>
+            <h5 class="modal-title">
+              Project {{ projectsStore.projects[modalProjectIndex].title }}
+            </h5>
           </div>
           <div class="modal-body">
-            <p>{{ projectsStore.projects[modalProjectId].description }}</p>
-            <p>Recipient: {{ projectsStore.projects[modalProjectId].recipient }}</p>
+            <p>{{ projectsStore.projects[modalProjectIndex].description }}</p>
+            <p>Recipient: {{ projectsStore.projects[modalProjectIndex].recipient }}</p>
             <p>
-              Recipient Specifier: {{ projectsStore.projects[modalProjectId].recipientSpecifier }}
+              Recipient Specifier:
+              {{ projectsStore.projects[modalProjectIndex].recipientSpecifier }}
             </p>
 
             <p>
               Funds Transferred:
-              {{ projectsStore.projects[modalProjectId].areFundsTransferred ? "Yes" : "No" }}
+              {{ projectsStore.projects[modalProjectIndex].areFundsTransferred ? "Yes" : "No" }}
             </p>
 
             <ProgressBar
               :percentage="
-                projectsStore.projects[modalProjectId].amountFunded /
-                projectsStore.projects[modalProjectId].amountNeeded
+                (projectsStore.projects[modalProjectIndex].amountFunded * 100n) /
+                projectsStore.projects[modalProjectIndex].amountNeeded
               "
               :text="
-                ethers.formatEther(projectsStore.projects[modalProjectId].amountFunded) +
+                ethers.formatEther(projectsStore.projects[modalProjectIndex].amountFunded) +
                 ' / ' +
-                ethers.formatEther(projectsStore.projects[modalProjectId].amountNeeded) +
+                ethers.formatEther(projectsStore.projects[modalProjectIndex].amountNeeded) +
                 ' funded'
               "
             />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" tabindex="-1" id="fundModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Fund {{ projectsStore.projects[modalProjectIndex].title }}</h5>
+          </div>
+          <div class="modal-body">
+            <div class="row g-0">
+              <label class="col-auto from-label me-1" for="amountInput" style="line-height: 2.5"
+                >Amount:</label
+              >
+              <input
+                type="number"
+                class="col form-control me-2"
+                id="amountInput"
+                :min="MinProjectAmountEth"
+                v-model="amountToSend"
+              />
+            </div>
+            <p v-if="v$.amountToSend.$error" class="form-text text-danger mb-0">
+              {{ v$.amountToSend.$errors[0].$message }}
+            </p>
+
+            <button class="btn btn-primary float-end me-2 mt-2" @click="sendFunds">Send</button>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ export const useProjectsStore = defineStore("projects", {
             recipient: recipient,
             recipientSpecifier: recipientSpecifier,
             amountNeeded: amountNeeded,
-            amountFunded: 0,
+            amountFunded: 0n,
             areFundsTransferred: false
           })
         }
