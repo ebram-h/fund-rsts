@@ -8,9 +8,6 @@ a,
   padding: 3px;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+body {
+  padding-top: 75px;
 }

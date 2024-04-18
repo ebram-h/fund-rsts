@@ -1,24 +1,75 @@
 <script setup>
-import { RouterView } from "vue-router"
-import { ref } from "vue"
+import { RouterLink, RouterView } from "vue-router"
+import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/vue"
+import { BrowserProvider, Contract } from "ethers"
+import { useProjectsStore } from "./stores/projects"
+import { useUserInfoStore } from "./stores/userInfo"
 
-console.log(window.ethereum)
-// console.log()
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
+const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
 
-const connected = ref(window.ethereum === "true")
+const holesky = {
+  chainId: 17000,
+  name: "Holesky",
+  currency: "ETH",
+  exploreUrl: "https://holesky.etherscan.io/",
+  rpcUrl: "https://holesky.drpc.org"
+}
 
-console.log(connected)
+const metadata = {
+  name: "fund-r-tsts",
+  description: "Desc",
+  url: "127.0.0.1:5173",
+  icons: "@/assets/logo.svg"
+}
 
-async function tryConnect() {
-  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
-  console.log(accounts)
+const ethersConfig = defaultConfig({
+  metadata,
+  rpcUrl: "https://holesky.drpc.org",
+  defaultChainId: 17000
+})
+
+const modal = createWeb3Modal({
+  ethersConfig,
+  chains: [holesky],
+  projectId,
+  enableAnalytics: true,
+  enableOnramp: false
+})
+
+const userInfo = useUserInfoStore()
+
+modal.subscribeProvider(async () => {
+  if (!modal.getIsConnected())
+    // TODO: Clear the loaded list of projects
+    return
+
+  const abi = await fetchContractAbi(contractAddress)
+  const walletProvider = modal.getWalletProvider()
+  const ethersProvider = new BrowserProvider(walletProvider)
+  const signer = await ethersProvider.getSigner()
+  const fundRTsts = new Contract(contractAddress, abi, signer)
+
+  const projectsStore = useProjectsStore()
+  await projectsStore.initialize(fundRTsts)
+
+  await userInfo.initialize(signer, fundRTsts, projectsStore.projects)
+})
+
+async function fetchContractAbi(contractAddress) {
+  const etherscanApiKey = import.meta.env.VITE_ETHERSCAN_API_KEY
+  const response = await fetch(
+    `https://api-holesky.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}&apikey=${etherscanApiKey}`
+  )
+  const result = (await response.json()).result
+  return result
 }
 </script>
 
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
+    <div class="container">
+      <RouterLink to="/" class="navbar-brand" href="localhost:51">
         <img
           src="@/assets/logo.svg"
           alt="Logo"
@@ -27,7 +78,7 @@ async function tryConnect() {
           class="d-inline-block align-text-top"
         />
         <span style="color: white">TerrorFund</span>
-      </a>
+      </RouterLink>
       <button
         class="navbar-toggler"
         type="button"
@@ -41,14 +92,23 @@ async function tryConnect() {
       </button>
       <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-        <button v-if="!connected" @click="tryConnect()" class="btn btn-primary">
-          Connect Wallet
+        <w3m-button />
+        <button
+          v-if="userInfo.isOwner || userInfo.isRecipient || userInfo.isRecipientSpecifier"
+          @click="$router.push('/dashboard')"
+          class="btn btn-primary"
+          style="padding: 0 5px; margin: 5px 0; border-radius: 15px"
+        >
+          <span style="position: relative; top: 1px">Admin</span>
+          <img src="@/assets/Circle-A_red.svg" alt="Dashboard" width="30" height="30" />
         </button>
       </div>
     </div>
   </nav>
 
-  <RouterView />
+  <div class="container">
+    <RouterView />
+  </div>
 </template>
 
 <style scoped>
@@ -75,7 +135,6 @@ header {
   header {
     display: flex;
     place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
   }
 }
 </style>
