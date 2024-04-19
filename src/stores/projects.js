@@ -4,7 +4,17 @@ export const useProjectsStore = defineStore("projects", {
   state: () => ({ projects: [] }),
   actions: {
     async initialize(fundRTsts) {
-      this.projects = await fundRTsts.getAllProjects()
+      // Need to map them to new objects since those we receive are immutable and won't be tracked.
+      this.projects = (await fundRTsts.getAllProjects())?.map((p) => ({
+        title: p.title,
+        description: p.description,
+        recipient: p.recipient,
+        recipientSpecifier: p.recipientSpecifier,
+        amountNeeded: p.amountNeeded,
+        amountFunded: p.amountFunded,
+        areFundsTransferred: p.areFundsTransferred
+      }))
+
       fundRTsts.on(
         "ProjectAdded",
         // eslint-disable-next-line no-unused-vars
@@ -20,6 +30,11 @@ export const useProjectsStore = defineStore("projects", {
           })
         }
       )
+
+      fundRTsts.on("ProjectFunded", (projectId, amountFunded) => {
+        projectId = Number(projectId)
+        this.projects[projectId].amountFunded += amountFunded
+      })
     }
   }
 })
