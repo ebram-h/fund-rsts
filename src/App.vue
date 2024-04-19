@@ -4,6 +4,7 @@ import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/vue"
 import { BrowserProvider, Contract } from "ethers"
 import { useProjectsStore } from "./stores/projects"
 import { useUserInfoStore } from "./stores/userInfo"
+import fundRTstsContractAbi from "./assets/fundRTstsContractAbi.json"
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
@@ -44,26 +45,16 @@ modal.subscribeProvider(async () => {
     // TODO: Clear the loaded list of projects
     return
 
-  const abi = await fetchContractAbi(contractAddress)
   const walletProvider = modal.getWalletProvider()
   const ethersProvider = new BrowserProvider(walletProvider)
   const signer = await ethersProvider.getSigner()
-  const fundRTsts = new Contract(contractAddress, abi, signer)
+  const fundRTsts = new Contract(contractAddress, fundRTstsContractAbi, signer)
 
   const projectsStore = useProjectsStore()
   await projectsStore.initialize(fundRTsts)
 
   await userInfo.initialize(signer, fundRTsts, projectsStore.projects)
 })
-
-async function fetchContractAbi(contractAddress) {
-  const etherscanApiKey = import.meta.env.VITE_ETHERSCAN_API_KEY
-  const response = await fetch(
-    `https://api-holesky.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}&apikey=${etherscanApiKey}`
-  )
-  const result = (await response.json()).result
-  return result
-}
 </script>
 
 <template>
