@@ -5,7 +5,7 @@ defineProps(["percentage", "text"])
 <template>
   <div class="progress position-relative">
     <div
-      class="progress-bar progress-bar-stripped"
+      class="progress-bar progress-bar-striped bg-danger"
       role="progressbar"
       :style="{ width: percentage.toString() + '%' }"
       :aria-valuenow="percentage"
