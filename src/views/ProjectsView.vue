@@ -3,7 +3,7 @@ import { useProjectsStore } from "@/stores/projects"
 import { ethers } from "ethers"
 import { computed, ref } from "vue"
 import ProgressBar from "../components/ProgressBar.vue"
-import { MinProjectAmountEth } from "@/utils/Constants"
+import { MinFundingAmountEth } from "@/utils/Constants"
 import { minValue, required } from "@vuelidate/validators"
 import useVuelidate from "@vuelidate/core"
 import { useUserInfoStore } from "@/stores/userInfo"
@@ -19,7 +19,7 @@ const amountToSend = ref(0)
 const amountValidationRule = computed(() => ({
   amountToSend: {
     required,
-    minValue: minValue(MinProjectAmountEth)
+    minValue: minValue(MinFundingAmountEth)
   }
 }))
 
@@ -134,7 +134,7 @@ async function sendFunds() {
                 type="number"
                 class="col form-control me-2"
                 id="amountInput"
-                :min="MinProjectAmountEth"
+                :min="MinFundingAmountEth"
                 v-model="amountToSend"
               />
             </div>
