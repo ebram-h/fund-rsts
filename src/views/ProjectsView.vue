@@ -13,7 +13,14 @@ const userInfoStore = useUserInfoStore()
 
 const modalProjectIndex = ref(0)
 
-const projectSelectedToFund = ref(0)
+const filter = ref("")
+const filteredProjects = computed(() => {
+  if (!filter.value) return projectsStore.projects
+
+  return projectsStore.projects.filter((p) => p.recipient === filter.value)
+})
+
+const projectSelectedToFund = ref(null)
 const amountToSend = ref(0)
 
 const amountValidationRule = computed(() => ({
@@ -29,7 +36,8 @@ async function sendFunds() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  await userInfoStore.connectedContract.fundProject(projectSelectedToFund.value, {
+  const projectId = projectsStore.projects.indexOf(projectSelectedToFund.value)
+  await userInfoStore.connectedContract.fundProject(projectId, {
     value: ethers.parseEther(amountToSend.value.toString())
   })
 }
@@ -37,9 +45,21 @@ async function sendFunds() {
 
 <template>
   <div>
-    <h1>Projects needing funds</h1>
+    <div class="row me-0 mb-3 g-0">
+      <h1 class="col">Projects needing funds</h1>
 
-    <div v-for="(project, index) in projectsStore.projects" class="card mb-3" :key="project">
+      <div class="my-auto col-3 float-end">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Filter by recipient address..."
+          aria-label="Filter by recipient address..."
+          v-model="filter"
+        />
+      </div>
+    </div>
+
+    <div v-for="(project, index) in filteredProjects" class="card mb-3" :key="project">
       <div class="card-body row g-0 d-flex" style="align-items: center">
         <span class="col-4" style="line-height: 2.9">
           {{ project.title }}
@@ -48,13 +68,12 @@ async function sendFunds() {
         <div class="col">
           <ProgressBar
             :percentage="
-              (projectsStore.projects[index].amountFunded * 100n) /
-              projectsStore.projects[index].amountNeeded
+              (filteredProjects[index].amountFunded * 100n) / filteredProjects[index].amountNeeded
             "
             :text="
-              ethers.formatEther(projectsStore.projects[index].amountFunded) +
+              ethers.formatEther(filteredProjects[index].amountFunded) +
               ' / ' +
-              ethers.formatEther(projectsStore.projects[index].amountNeeded) +
+              ethers.formatEther(filteredProjects[index].amountNeeded) +
               ' funded'
             "
             class="me-2"
@@ -65,7 +84,7 @@ async function sendFunds() {
             class="btn btn-primary me-2"
             data-bs-toggle="modal"
             data-bs-target="#fundModal"
-            @click="projectSelectedToFund = index"
+            @click="projectSelectedToFund = project"
           >
             Fund
           </button>
@@ -81,36 +100,34 @@ async function sendFunds() {
       </div>
     </div>
 
-    <div class="modal" tabindex="-1" id="projectInfoModal">
+    <div v-if="filteredProjects.length" class="modal" tabindex="-1" id="projectInfoModal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">
-              Project {{ projectsStore.projects[modalProjectIndex].title }}
-            </h5>
+            <h5 class="modal-title">Project {{ filteredProjects[modalProjectIndex].title }}</h5>
           </div>
           <div class="modal-body">
-            <p>{{ projectsStore.projects[modalProjectIndex].description }}</p>
-            <p>Recipient: {{ projectsStore.projects[modalProjectIndex].recipient }}</p>
+            <p>{{ filteredProjects[modalProjectIndex].description }}</p>
+            <p>Recipient: {{ filteredProjects[modalProjectIndex].recipient }}</p>
             <p>
               Recipient Specifier:
-              {{ projectsStore.projects[modalProjectIndex].recipientSpecifier }}
+              {{ filteredProjects[modalProjectIndex].recipientSpecifier }}
             </p>
 
             <p>
               Funds Transferred:
-              {{ projectsStore.projects[modalProjectIndex].areFundsTransferred ? "Yes" : "No" }}
+              {{ filteredProjects[modalProjectIndex].areFundsTransferred ? "Yes" : "No" }}
             </p>
 
             <ProgressBar
               :percentage="
-                (projectsStore.projects[modalProjectIndex].amountFunded * 100n) /
-                projectsStore.projects[modalProjectIndex].amountNeeded
+                (filteredProjects[modalProjectIndex].amountFunded * 100n) /
+                filteredProjects[modalProjectIndex].amountNeeded
               "
               :text="
-                ethers.formatEther(projectsStore.projects[modalProjectIndex].amountFunded) +
+                ethers.formatEther(filteredProjects[modalProjectIndex].amountFunded) +
                 ' / ' +
-                ethers.formatEther(projectsStore.projects[modalProjectIndex].amountNeeded) +
+                ethers.formatEther(filteredProjects[modalProjectIndex].amountNeeded) +
                 ' funded'
               "
             />
@@ -119,11 +136,11 @@ async function sendFunds() {
       </div>
     </div>
 
-    <div class="modal" tabindex="-1" id="fundModal">
+    <div v-if="projectSelectedToFund" class="modal" tabindex="-1" id="fundModal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Fund {{ projectsStore.projects[modalProjectIndex].title }}</h5>
+            <h5 class="modal-title">Fund {{ projectSelectedToFund.title }}</h5>
           </div>
           <div class="modal-body">
             <div class="row g-0">
