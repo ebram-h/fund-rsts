@@ -17,7 +17,22 @@ const filter = ref("")
 const filteredProjects = computed(() => {
   if (!filter.value) return projectsStore.projects
 
-  return projectsStore.projects.filter((p) => p.recipient === filter.value)
+  const filterLowerCase = filter.value.toLowerCase()
+
+  // Possibly an address
+  if (filterLowerCase.length === 42)
+    return projectsStore.projects.filter(
+      (p) =>
+        p.recipient.toLowerCase() === filterLowerCase ||
+        p.title.toLowerCase().includes(filterLowerCase) ||
+        p.description.toLowerCase().includes(filterLowerCase)
+    )
+
+  return projectsStore.projects.filter(
+    (p) =>
+      p.title.toLowerCase().includes(filterLowerCase) ||
+      p.description.toLowerCase().includes(filterLowerCase)
+  )
 })
 
 const projectSelectedToFund = ref(null)
@@ -59,7 +74,7 @@ async function sendFunds() {
       </div>
     </div>
 
-    <div v-for="(project, index) in filteredProjects" class="card mb-3" :key="project">
+    <div v-for="(project, index) in filteredProjects" class="card mb-3" :key="index">
       <div class="card-body row g-0 d-flex" style="align-items: center">
         <span class="col-4" style="line-height: 2.9">
           {{ project.title }}
