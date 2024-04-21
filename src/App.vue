@@ -5,6 +5,7 @@ import { BrowserProvider, Contract } from "ethers"
 import { useProjectsStore } from "./stores/projects"
 import { useUserInfoStore } from "./stores/userInfo"
 import fundRTstsContractAbi from "./assets/fundRTstsContractAbi.json"
+import router from "./router"
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
@@ -38,22 +39,30 @@ const modal = createWeb3Modal({
   enableOnramp: false
 })
 
+const projectsStore = useProjectsStore()
 const userInfo = useUserInfoStore()
 
 modal.subscribeProvider(async () => {
-  if (!modal.getIsConnected())
-    // TODO: Clear the loaded list of projects
+  if (!modal.getIsConnected()) {
+    userInfo?.clear()
+    projectsStore?.clear()
+    router.push("/unauthorized")
     return
+  }
 
+  userInfo.loggingIn = true
   const walletProvider = modal.getWalletProvider()
   const ethersProvider = new BrowserProvider(walletProvider)
   const signer = await ethersProvider.getSigner()
   const fundRTsts = new Contract(contractAddress, fundRTstsContractAbi, signer)
 
-  const projectsStore = useProjectsStore()
   await projectsStore.initialize(fundRTsts)
 
   await userInfo.initialize(signer, fundRTsts, projectsStore.projects)
+
+  userInfo.loggingIn = false
+
+  router.push("/")
 })
 </script>
 
@@ -85,7 +94,7 @@ modal.subscribeProvider(async () => {
         <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
         <w3m-button />
         <button
-          v-if="userInfo.isOwner || userInfo.isRecipient || userInfo.isRecipientSpecifier"
+          v-if="userInfo.isOwner || userInfo.isRecipientSpecifier"
           @click="$router.push('/dashboard')"
           class="btn btn-primary"
           style="padding: 0 5px; margin: 5px 0; border-radius: 15px"

@@ -2,7 +2,7 @@
 import { useProjectsStore } from "@/stores/projects"
 import { ethers } from "ethers"
 import { computed, ref } from "vue"
-import ProgressBar from "../components/ProgressBar.vue"
+import ProjectList from "../components/ProjectList.vue"
 import { MinFundingAmountEth } from "@/utils/Constants"
 import { minValue, required } from "@vuelidate/validators"
 import useVuelidate from "@vuelidate/core"
@@ -10,8 +10,6 @@ import { useUserInfoStore } from "@/stores/userInfo"
 
 const projectsStore = useProjectsStore()
 const userInfoStore = useUserInfoStore()
-
-const modalProjectIndex = ref(0)
 
 const filter = ref("")
 const filteredProjects = computed(() => {
@@ -35,7 +33,7 @@ const filteredProjects = computed(() => {
   )
 })
 
-const projectSelectedToFund = ref(null)
+const projectIndexToFund = ref(0)
 const amountToSend = ref(0)
 
 const amountValidationRule = computed(() => ({
@@ -51,7 +49,7 @@ async function sendFunds() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  const projectId = projectsStore.projects.indexOf(projectSelectedToFund.value)
+  const projectId = projectsStore.projects.indexOf(filteredProjects.value[projectIndexToFund.value])
   await userInfoStore.connectedContract.fundProject(projectId, {
     value: ethers.parseEther(amountToSend.value.toString())
   })
@@ -67,95 +65,37 @@ async function sendFunds() {
         <input
           type="text"
           class="form-control"
-          placeholder="Filter by recipient address..."
-          aria-label="Filter by recipient address..."
+          placeholder="Search projects and recipients..."
+          aria-label="Search projects and recipients..."
           v-model="filter"
         />
       </div>
     </div>
 
-    <div v-for="(project, index) in filteredProjects" class="card mb-3" :key="index">
-      <div class="card-body row g-0 d-flex" style="align-items: center">
-        <span class="col-4" style="line-height: 2.9">
-          {{ project.title }}
-        </span>
+    <ProjectList :projects="filteredProjects">
+      <template #default="{ project, index }">
+        <button
+          class="btn btn-primary me-2"
+          data-bs-toggle="modal"
+          data-bs-target="#fundModal"
+          @click="projectIndexToFund = index"
+          :disabled="project.amountFunded == project.amountNeeded"
+        >
+          Fund
+        </button>
+      </template>
+    </ProjectList>
 
-        <div class="col">
-          <ProgressBar
-            :percentage="
-              (filteredProjects[index].amountFunded * 100n) / filteredProjects[index].amountNeeded
-            "
-            :text="
-              ethers.formatEther(filteredProjects[index].amountFunded) +
-              ' / ' +
-              ethers.formatEther(filteredProjects[index].amountNeeded) +
-              ' funded'
-            "
-            class="me-2"
-          />
-        </div>
-        <div class="col-auto">
-          <button
-            class="btn btn-primary me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#fundModal"
-            @click="projectSelectedToFund = project"
-          >
-            Fund
-          </button>
-          <button
-            class="btn btn-secondary"
-            data-bs-toggle="modal"
-            data-bs-target="#projectInfoModal"
-            @click="modalProjectIndex = index"
-          >
-            i
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="filteredProjects.length" class="modal" tabindex="-1" id="projectInfoModal">
+    <div
+      v-if="filteredProjects && filteredProjects.length"
+      class="modal"
+      tabindex="-1"
+      id="fundModal"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Project {{ filteredProjects[modalProjectIndex].title }}</h5>
-          </div>
-          <div class="modal-body">
-            <p>{{ filteredProjects[modalProjectIndex].description }}</p>
-            <p>Recipient: {{ filteredProjects[modalProjectIndex].recipient }}</p>
-            <p>
-              Recipient Specifier:
-              {{ filteredProjects[modalProjectIndex].recipientSpecifier }}
-            </p>
-
-            <p>
-              Funds Transferred:
-              {{ filteredProjects[modalProjectIndex].areFundsTransferred ? "Yes" : "No" }}
-            </p>
-
-            <ProgressBar
-              :percentage="
-                (filteredProjects[modalProjectIndex].amountFunded * 100n) /
-                filteredProjects[modalProjectIndex].amountNeeded
-              "
-              :text="
-                ethers.formatEther(filteredProjects[modalProjectIndex].amountFunded) +
-                ' / ' +
-                ethers.formatEther(filteredProjects[modalProjectIndex].amountNeeded) +
-                ' funded'
-              "
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="projectSelectedToFund" class="modal" tabindex="-1" id="fundModal">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Fund {{ projectSelectedToFund.title }}</h5>
+            <h5 class="modal-title">Fund "{{ filteredProjects.at(projectIndexToFund).title }}"</h5>
           </div>
           <div class="modal-body">
             <div class="row g-0">

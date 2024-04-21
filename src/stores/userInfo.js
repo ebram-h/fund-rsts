@@ -6,7 +6,8 @@ export const useUserInfoStore = defineStore("userInfo", {
     isRecipient: false,
     isRecipientSpecifier: false,
     userAddress: "",
-    connectedContract: null
+    connectedContract: null,
+    loggingIn: false
   }),
   actions: {
     async initialize(signer, fundRTsts, projects) {
@@ -16,6 +17,11 @@ export const useUserInfoStore = defineStore("userInfo", {
       this.isOwner = ownerAddress == this.userAddress
       this.isRecipient = projects.some((p) => p.recipient == this.userAddress)
       this.isRecipientSpecifier = projects.some((p) => p.recipientSpecifier == this.userAddress)
+    },
+    clear() {
+      this.isOwner = this.isRecipient = this.isRecipientSpecifier = false
+      this.userAddress = ""
+      this.connectedContract = null
     }
   }
 })

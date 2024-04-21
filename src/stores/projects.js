@@ -35,6 +35,9 @@ export const useProjectsStore = defineStore("projects", {
         projectId = Number(projectId)
         this.projects[projectId].amountFunded += amountFunded
       })
+    },
+    clear() {
+      this.projects = []
     }
   }
 })
