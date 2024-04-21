@@ -28,8 +28,24 @@ const router = createRouter({
       name: "dashboard",
       component: () => import("../views/DashboardView.vue"),
       beforeEnter: (to, from, next) => {
-        if (useUserInfoStore().isOwner || useUserInfoStore().isRecipientSpecifier) next()
-        else next("/")
+        const userInfo = useUserInfoStore()
+        if (userInfo.isOwner || userInfo.isRecipientSpecifier) {
+          next()
+        } else next("/")
+      },
+      redirect: (to) => {
+        // Appearently redirect is called before beforeEnter so we
+        // protect against uninitialized userInfoStore here.
+        // Uninitialized userInfoStore may occur when the user enters
+        // the address into dashboard which reloads everything due to change in provider.
+        let userInfo
+        try {
+          userInfo = useUserInfoStore()
+        } catch {
+          // Redirect to home when
+          return "/"
+        }
+        return userInfo.isOwner ? "/dashboard/addProject" : "/dashboard/changeRecipient"
       },
       children: [
         {
