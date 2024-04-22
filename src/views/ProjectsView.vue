@@ -11,29 +11,7 @@ import { useUserInfoStore } from "@/stores/userInfo"
 const projectsStore = useProjectsStore()
 const userInfoStore = useUserInfoStore()
 
-const filter = ref("")
-const filteredProjects = computed(() => {
-  if (!filter.value) return projectsStore.projects
-
-  const filterLowerCase = filter.value.toLowerCase()
-
-  // Possibly an address
-  if (filterLowerCase.length === 42)
-    return projectsStore.projects.filter(
-      (p) =>
-        p.recipient.toLowerCase() === filterLowerCase ||
-        p.title.toLowerCase().includes(filterLowerCase) ||
-        p.description.toLowerCase().includes(filterLowerCase)
-    )
-
-  return projectsStore.projects.filter(
-    (p) =>
-      p.title.toLowerCase().includes(filterLowerCase) ||
-      p.description.toLowerCase().includes(filterLowerCase)
-  )
-})
-
-const projectIndexToFund = ref(0)
+const projectToFund = ref(0)
 const amountToSend = ref(0)
 
 const amountValidationRule = computed(() => ({
@@ -49,7 +27,7 @@ async function sendFunds() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  const projectId = projectsStore.projects.indexOf(filteredProjects.value[projectIndexToFund.value])
+  const projectId = projectsStore.projects.indexOf(projectToFund.value)
   await userInfoStore.connectedContract.fundProject(projectId, {
     value: ethers.parseEther(amountToSend.value.toString())
   })
@@ -60,25 +38,15 @@ async function sendFunds() {
   <div>
     <div class="row me-0 mb-3 g-0">
       <h1 class="col">Projects needing funds</h1>
-
-      <div class="my-auto col-3 float-end">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Search projects and recipients..."
-          aria-label="Search projects and recipients..."
-          v-model="filter"
-        />
-      </div>
     </div>
 
-    <ProjectList :projects="filteredProjects">
-      <template #default="{ project, index }">
+    <ProjectList :projects="projectsStore.projects">
+      <template #default="{ project }">
         <button
           class="btn btn-primary me-2"
           data-bs-toggle="modal"
           data-bs-target="#fundModal"
-          @click="projectIndexToFund = index"
+          @click="projectToFund = project"
           :disabled="project.amountFunded == project.amountNeeded"
         >
           Fund
@@ -86,16 +54,11 @@ async function sendFunds() {
       </template>
     </ProjectList>
 
-    <div
-      v-if="filteredProjects && filteredProjects.length"
-      class="modal"
-      tabindex="-1"
-      id="fundModal"
-    >
+    <div class="modal" tabindex="-1" id="fundModal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Fund "{{ filteredProjects.at(projectIndexToFund).title }}"</h5>
+            <h5 class="modal-title">Fund "{{ projectToFund?.title }}"</h5>
           </div>
           <div class="modal-body">
             <div class="row g-0">
