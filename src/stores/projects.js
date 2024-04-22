@@ -35,6 +35,12 @@ export const useProjectsStore = defineStore("projects", {
         projectId = Number(projectId)
         this.projects[projectId].amountFunded += amountFunded
       })
+
+      fundRTsts.on("ProjectRecipientChanged", (projectId, newRecipient, newRecipientSpecifier) => {
+        projectId = Number(projectId)
+        this.projects[projectId].recipient = newRecipient
+        this.projects[projectId].recipientSpecifier = newRecipientSpecifier
+      })
     },
     clear() {
       this.projects = []

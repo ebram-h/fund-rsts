@@ -14,7 +14,7 @@ const projectsUserCanChangeRecipientOf = computed(() =>
   projectsStore.projects.filter((p) => p.recipientSpecifier === userInfoStore.userAddress)
 )
 
-const projectIndexToChangeRecipientOf = ref(0)
+const projectToChangeRecipientOf = ref(0)
 const newRecipientAddress = ref("")
 const newRecipientSpecifierAddress = ref("")
 
@@ -31,28 +31,30 @@ const validationRules = computed(() => ({
   }
 }))
 
-const v$ = useVuelidate(validationRules, { newRecipientAddress })
+const v$ = useVuelidate(validationRules, { newRecipientAddress, newRecipientSpecifierAddress })
 
 async function changeRecipient() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  const projectId = projectsStore.projects.indexOf(
-    projectIndexToChangeRecipientOf[projectIndexToChangeRecipientOf]
+  const projectId = projectsStore.projects.indexOf(projectToChangeRecipientOf.value)
+  await userInfoStore.connectedContract.changeProjectRecipient(
+    projectId,
+    newRecipientAddress.value,
+    newRecipientSpecifierAddress.value
   )
-  await userInfoStore.connectedContract.changeProjectRecipient(projectId)
 }
 </script>
 
 <template>
   <div v-if="userInfoStore.isRecipientSpecifier">
     <ProjectList :projects="projectsUserCanChangeRecipientOf"
-      ><template #default="{ project, index }">
+      ><template #default="{ project }">
         <button
           class="btn btn-primary"
           data-bs-toggle="modal"
           data-bs-target="#changeRecipientModal"
-          @click="projectsUserCanChangeRecipientOf = index"
+          @click="projectToChangeRecipientOf = project"
           :disabled="project.areFundsTransferred"
         >
           Change Recipient
@@ -60,61 +62,48 @@ async function changeRecipient() {
       </template>
     </ProjectList>
 
-    <div
-      v-if="projectsUserCanChangeRecipientOf && projectsUserCanChangeRecipientOf.length"
-      class="modal"
-      tabindex="-1"
-      id="changeRecipientModal"
-    >
+    <div class="modal" tabindex="-1" id="changeRecipientModal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              Change Recipient For "{{
-                projectsUserCanChangeRecipientOf.at(projectIndexToChangeRecipientOf).title
-              }}"
+              Change Recipient For "{{ projectToChangeRecipientOf?.title }}"
             </h5>
           </div>
           <div class="modal-body">
-            <div class="row g-0">
-              <label
-                class="col-auto from-label me-1"
-                for="newRecipientAddressInput"
-                style="line-height: 2.5"
+            <div class="">
+              <label class="from-label" for="newRecipientAddressInput" style="line-height: 2.5"
                 >New Recipient's Address:</label
               >
               <input
                 type="text"
-                class="col form-control me-2"
+                class="form-control"
                 id="newRecipientAddressInput"
                 minlength="42"
                 maxlength="42"
                 v-model="newRecipientAddress"
               />
+              <p v-if="v$.newRecipientAddress.$error" class="form-text text-danger mb-0">
+                {{ v$.newRecipientAddress.$errors[0].$message }}
+              </p>
             </div>
-            <p v-if="v$.newRecipientAddress.$error" class="form-text text-danger mb-0">
-              {{ v$.newRecipientAddress.$errors[0].$message }}
-            </p>
 
-            <div class="row g-0">
-              <label
-                class="col-auto from-label me-1"
-                for="newRecipientSpecifierInput"
-                style="line-height: 2.5"
+            <div class="">
+              <label class="from-label" for="newRecipientSpecifierInput" style="line-height: 2.5"
                 >New Recipient Specifier's Address:</label
               >
               <input
                 type="text"
-                class="col form-control me-2"
+                class="form-control"
                 id="newRecipientSpecifierInput"
                 minlength="42"
                 maxlength="42"
                 v-model="newRecipientSpecifierAddress"
               />
+              <p v-if="v$.newRecipientSpecifierAddress.$error" class="form-text text-danger mb-0">
+                {{ v$.newRecipientSpecifierAddress.$errors[0].$message }}
+              </p>
             </div>
-            <p v-if="v$.newRecipientSpecifierAddress.$error" class="form-text text-danger mb-0">
-              {{ v$.newRecipientSpecifierAddress.$errors[0].$message }}
-            </p>
 
             <button class="btn btn-primary float-end me-2 mt-2" @click="changeRecipient">
               Confirm
