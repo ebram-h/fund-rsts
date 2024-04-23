@@ -33,16 +33,25 @@ const validationRules = computed(() => ({
 
 const v$ = useVuelidate(validationRules, { newRecipientAddress, newRecipientSpecifierAddress })
 
+const closeModalBtn = ref(null)
+
 async function changeRecipient() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  const projectId = projectsStore.projects.indexOf(projectToChangeRecipientOf.value)
-  await userInfoStore.connectedContract.changeProjectRecipient(
-    projectId,
-    newRecipientAddress.value,
-    newRecipientSpecifierAddress.value
-  )
+  try {
+    const projectId = projectsStore.projects.indexOf(projectToChangeRecipientOf.value)
+    await userInfoStore.connectedContract.changeProjectRecipient(
+      projectId,
+      newRecipientAddress.value,
+      newRecipientSpecifierAddress.value
+    )
+  } catch (error) {
+    console.log(error)
+  }
+
+  newRecipientAddress.value = newRecipientSpecifierAddress.value = ""
+  closeModalBtn.value.click()
 }
 </script>
 
@@ -69,6 +78,14 @@ async function changeRecipient() {
             <h5 class="modal-title">
               Change Recipient For "{{ projectToChangeRecipientOf?.title }}"
             </h5>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              ref="closeModalBtn"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="">

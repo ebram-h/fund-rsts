@@ -23,14 +23,23 @@ const amountValidationRule = computed(() => ({
 
 const v$ = useVuelidate(amountValidationRule, { amountToSend })
 
+const closeFundModalBtn = ref(null)
+
 async function sendFunds() {
   const isValid = await v$.value.$validate()
   if (!isValid) return
 
-  const projectId = projectsStore.projects.indexOf(projectToFund.value)
-  await userInfoStore.connectedContract.fundProject(projectId, {
-    value: ethers.parseEther(amountToSend.value.toString())
-  })
+  try {
+    const projectId = projectsStore.projects.indexOf(projectToFund.value)
+    await userInfoStore.connectedContract.fundProject(projectId, {
+      value: ethers.parseEther(amountToSend.value.toString())
+    })
+  } catch (error) {
+    console.log(error)
+  }
+
+  amountToSend.value = 0
+  closeFundModalBtn.value.click()
 }
 </script>
 
@@ -59,6 +68,14 @@ async function sendFunds() {
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Fund "{{ projectToFund?.title }}"</h5>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              ref="closeFundModalBtn"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="row g-0">
