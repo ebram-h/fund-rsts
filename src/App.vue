@@ -77,7 +77,7 @@ modal.subscribeProvider(async () => {
           height="24"
           class="d-inline-block align-text-top"
         />
-        <span style="color: white">TerrorFund</span>
+        <span style="color: white">Fund Rts</span>
       </RouterLink>
       <button
         class="navbar-toggler"
