@@ -12,7 +12,8 @@ export const useProjectsStore = defineStore("projects", {
         recipientSpecifier: p.recipientSpecifier,
         amountNeeded: p.amountNeeded,
         amountFunded: p.amountFunded,
-        areFundsTransferred: p.areFundsTransferred
+        areFundsTransferred: p.areFundsTransferred,
+        pendingFundFromThisUser: 0n
       }))
 
       fundRTsts.on(
@@ -26,13 +27,17 @@ export const useProjectsStore = defineStore("projects", {
             recipientSpecifier: recipientSpecifier,
             amountNeeded: amountNeeded,
             amountFunded: 0n,
-            areFundsTransferred: false
+            areFundsTransferred: false,
+            pendingFundFromThisUser: 0n
           })
         }
       )
 
       fundRTsts.on("ProjectFunded", (projectId, amountFunded) => {
         projectId = Number(projectId)
+        if (this.projects[projectId].pendingFundFromThisUser == amountFunded) {
+          this.projects[projectId].pendingFundFromThisUser = 0n
+        }
         this.projects[projectId].amountFunded += amountFunded
       })
 

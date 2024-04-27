@@ -76,6 +76,9 @@ const filteredProjects = computed(() => {
             ' funded'
           "
           class="me-2"
+          :second-segment-percentage="
+            (project.pendingFundFromThisUser * 100n) / project.amountNeeded
+          "
         />
       </div>
       <div class="col-auto">

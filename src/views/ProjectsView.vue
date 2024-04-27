@@ -11,7 +11,7 @@ import { useUserInfoStore } from "@/stores/userInfo"
 const projectsStore = useProjectsStore()
 const userInfoStore = useUserInfoStore()
 
-const projectToFund = ref(0)
+const projectToFund = ref(null)
 const amountToSend = ref(0)
 
 const amountValidationRule = computed(() => ({
@@ -34,7 +34,9 @@ async function sendFunds() {
     await userInfoStore.connectedContract.fundProject(projectId, {
       value: ethers.parseEther(amountToSend.value.toString())
     })
+    projectToFund.value.pendingFundFromThisUser = ethers.parseEther(amountToSend.value.toString())
   } catch (error) {
+    projectToFund.value.pendingFundFromThisUser = 0n
     console.log(error)
   }
 
@@ -51,15 +53,22 @@ async function sendFunds() {
 
     <ProjectList :projects="projectsStore.projects">
       <template #default="{ project }">
-        <button
-          class="btn btn-primary me-2"
-          data-bs-toggle="modal"
-          data-bs-target="#fundModal"
-          @click="projectToFund = project"
-          :disabled="project.amountFunded == project.amountNeeded"
-        >
-          Fund
-        </button>
+        <div class="row ">
+          <div class="col-auto spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Funding...</span>
+          </div>
+          <button
+            class="col btn btn-primary me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#fundModal"
+            @click="projectToFund = project"
+            :disabled="
+              project.amountFunded == project.amountNeeded || project.pendingFundFromThisUser
+            "
+          >
+            Fund
+          </button>
+        </div>
       </template>
     </ProjectList>
 
