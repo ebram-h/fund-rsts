@@ -50,7 +50,7 @@ function showFundErrorDialog(project) {
 <template>
   <div>
     <div class="row me-0 mb-3 g-0">
-      <h1 class="col">Projects needing funds</h1>
+      <h1 class="col">Those in need:</h1>
     </div>
 
     <ProjectList :projects="projectsStore.projects">
