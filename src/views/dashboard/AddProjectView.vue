@@ -36,6 +36,10 @@ async function tryAddProject() {
     state.recipientSpecifier,
     ethers.parseEther(state.amountNeeded.toString())
   )
+
+  state.title = state.description = state.recipient = state.recipientSpecifier = ""
+  state.amountNeeded = 0
+  v$.value.$reset()
 }
 </script>
 
