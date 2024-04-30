@@ -109,6 +109,25 @@ modal.subscribeProvider(async () => {
   <div class="container">
     <RouterView />
   </div>
+
+  <!-- This is for modalService -->
+  <div class="modal" tabindex="-1" id="mainModal" ref="mainModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body"></div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

@@ -1,11 +1,11 @@
 <script setup>
-const props = defineProps(["projects"])
-
-import { computed, ref } from "vue"
+import { computed, h, ref } from "vue"
 import { ethers } from "ethers"
 import ProgressBar from "./ProgressBar.vue"
+import { showModal } from "@/utils/modalService"
+import ProjectInfo from "./modalContents/ProjectInfo.vue"
 
-const modalProjectIndex = ref(0)
+const props = defineProps(["projects"])
 
 const hideFullyFunded = ref(false)
 const filter = ref("")
@@ -36,6 +36,10 @@ const filteredProjects = computed(() => {
       hideFullyFundedPredicate(p)
   )
 })
+
+function infoBtnClicked(project) {
+  showModal(`Project "${project.title}"`, h(ProjectInfo, { project: project }))
+}
 </script>
 
 <template>
@@ -83,57 +87,7 @@ const filteredProjects = computed(() => {
       </div>
       <div class="col-auto">
         <slot v-bind="{ project, index }" />
-        <button
-          class="btn btn-secondary ms-1"
-          data-bs-toggle="modal"
-          data-bs-target="#projectInfoModal"
-          @click="modalProjectIndex = index"
-        >
-          i
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div v-if="projects && projects.length" class="modal" tabindex="-1" id="projectInfoModal">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Project "{{ projects[modalProjectIndex].title }}"</h5>
-
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <p>{{ projects[modalProjectIndex].description }}</p>
-          <p>Recipient: {{ projects[modalProjectIndex].recipient }}</p>
-          <p>
-            Recipient Specifier:
-            {{ projects[modalProjectIndex].recipientSpecifier }}
-          </p>
-
-          <p>
-            Funds Transferred:
-            {{ projects[modalProjectIndex].areFundsTransferred ? "Yes" : "No" }}
-          </p>
-
-          <ProgressBar
-            :percentage="
-              (projects[modalProjectIndex].amountFunded * 100n) /
-              projects[modalProjectIndex].amountNeeded
-            "
-            :text="
-              ethers.formatEther(projects[modalProjectIndex].amountFunded) +
-              ' / ' +
-              ethers.formatEther(projects[modalProjectIndex].amountNeeded) +
-              ' funded'
-            "
-          />
-        </div>
+        <button class="btn btn-secondary ms-1" @click="infoBtnClicked(project)">i</button>
       </div>
     </div>
   </div>

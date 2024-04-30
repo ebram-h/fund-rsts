@@ -13,7 +13,8 @@ export const useProjectsStore = defineStore("projects", {
         amountNeeded: p.amountNeeded,
         amountFunded: p.amountFunded,
         areFundsTransferred: p.areFundsTransferred,
-        pendingFundFromThisUser: 0n
+        pendingFundFromThisUser: 0n,
+        lastFundingError: ""
       }))
 
       fundRTsts.on(
@@ -28,7 +29,8 @@ export const useProjectsStore = defineStore("projects", {
             amountNeeded: amountNeeded,
             amountFunded: 0n,
             areFundsTransferred: false,
-            pendingFundFromThisUser: 0n
+            pendingFundFromThisUser: 0n,
+            lastFundingError: ""
           })
         }
       )
