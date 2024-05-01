@@ -1,3 +1,5 @@
+[![CD-Liara](https://github.com/xc6pm/fund-rsts/actions/workflows/liara.yaml/badge.svg)](https://github.com/xc6pm/fund-rsts/actions/workflows/liara.yaml)
+
 # fund-rsts
 
 This template should help get you started developing with Vue 3 in Vite.
