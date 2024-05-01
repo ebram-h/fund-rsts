@@ -21,9 +21,9 @@ defineProps(["project"])
   <ProgressBar
     :percentage="(project.amountFunded * 100n) / project.amountNeeded"
     :text="
-      ethers.formatEther(project.amountFunded) +
+      ethers.utils.formatEther(project.amountFunded) +
       ' / ' +
-      ethers.formatEther(project.amountNeeded) +
+      ethers.utils.formatEther(project.amountNeeded) +
       ' funded'
     "
   />

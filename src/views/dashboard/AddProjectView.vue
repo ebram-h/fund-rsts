@@ -34,7 +34,7 @@ async function tryAddProject() {
     state.description,
     state.recipient,
     state.recipientSpecifier,
-    ethers.parseEther(state.amountNeeded.toString())
+    ethers.utils.parseEther(state.amountNeeded.toString())
   )
 
   state.title = state.description = state.recipient = state.recipientSpecifier = ""

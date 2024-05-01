@@ -10,8 +10,8 @@ export const useProjectsStore = defineStore("projects", {
         description: p.description,
         recipient: p.recipient,
         recipientSpecifier: p.recipientSpecifier,
-        amountNeeded: p.amountNeeded,
-        amountFunded: p.amountFunded,
+        amountNeeded: BigInt(p.amountNeeded),
+        amountFunded: BigInt(p.amountFunded),
         areFundsTransferred: p.areFundsTransferred,
         pendingFundFromThisUser: 0n,
         lastFundingError: ""
@@ -40,7 +40,7 @@ export const useProjectsStore = defineStore("projects", {
         if (this.projects[projectId].pendingFundFromThisUser == amountFunded) {
           this.projects[projectId].pendingFundFromThisUser = 0n
         }
-        this.projects[projectId].amountFunded += amountFunded
+        this.projects[projectId].amountFunded += BigInt(amountFunded)
       })
 
       fundRTsts.on("ProjectRecipientChanged", (projectId, newRecipient, newRecipientSpecifier) => {

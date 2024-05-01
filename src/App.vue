@@ -1,7 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from "vue-router"
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/vue"
-import { BrowserProvider, Contract } from "ethers"
+import { createWeb3Modal, defaultConfig } from "@web3modal/ethers5/vue"
+import { Contract, providers } from "ethers"
 import { useProjectsStore } from "./stores/projects"
 import { useUserInfoStore } from "./stores/userInfo"
 import fundRTstsContractAbi from "./assets/fundRTstsContractAbi.json"
@@ -52,9 +52,9 @@ modal.subscribeProvider(async () => {
 
   userInfo.loggingIn = true
   const walletProvider = modal.getWalletProvider()
-  const ethersProvider = new BrowserProvider(walletProvider)
-  const signer = await ethersProvider.getSigner()
-  const fundRTsts = new Contract(contractAddress, fundRTstsContractAbi, signer)
+  const ethersProvider = new providers.Web3Provider(walletProvider)
+  const signer = ethersProvider.getSigner()
+  const fundRTsts = Object.freeze(new Contract(contractAddress, fundRTstsContractAbi, signer))
 
   await projectsStore.initialize(fundRTsts)
 

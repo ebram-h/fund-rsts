@@ -21,13 +21,13 @@ function fundButtonClicked(project) {
 }
 
 async function sendFund(projectToFund, amountToSend) {
-  projectToFund.pendingFundFromThisUser = ethers.parseEther(amountToSend.toString())
+  projectToFund.pendingFundFromThisUser = BigInt(ethers.utils.parseEther(amountToSend.toString()))
   projectToFund.lastFundingError = ""
 
   try {
     const projectId = projectsStore.projects.indexOf(projectToFund)
     await userInfoStore.connectedContract.fundProject(projectId, {
-      value: ethers.parseEther(amountToSend.toString())
+      value: ethers.utils.parseEther(amountToSend.toString())
     })
     hideModal()
   } catch (error) {
@@ -35,7 +35,7 @@ async function sendFund(projectToFund, amountToSend) {
     // is verified and resets the values
     projectToFund.pendingFundFromThisUser = 0n
     projectToFund.lastFundingError = error
-    console.log(error)
+    console.error(error)
   }
 }
 
