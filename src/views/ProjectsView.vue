@@ -29,13 +29,14 @@ async function sendFund(projectToFund, amountToSend) {
     await userInfoStore.connectedContract.fundProject(projectId, {
       value: ethers.utils.parseEther(amountToSend.toString())
     })
-    hideModal()
   } catch (error) {
     // If it succeeds the projectStore receives a notif after transaction
     // is verified and resets the values
     projectToFund.pendingFundFromThisUser = 0n
-    projectToFund.lastFundingError = error
+    projectToFund.lastFundingError = error.message
     console.error(error)
+  } finally {
+    hideModal()
   }
 }
 
