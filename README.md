@@ -1,15 +1,13 @@
 # fund-rsts
 [![CD-Liara](https://github.com/xc6pm/fund-rsts/actions/workflows/liara.yaml/badge.svg)](https://github.com/xc6pm/fund-rsts/actions/workflows/liara.yaml)
 
-This template should help get you started developing with Vue 3 in Vite.
+A frontend for the fundraising smart contract [fund-r-tsts](https://github.com/xc6pm/fund-r-tsts)
+
+
 
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
 
 ## Project Setup
 
@@ -21,16 +19,4 @@ npm install
 
 ```sh
 npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```
